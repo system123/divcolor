@@ -26,7 +26,7 @@ flags.DEFINE_integer("img_width", 64, "input image width")
 flags.DEFINE_integer("img_height", 64, "input image height")
 
 #Network Params
-flags.DEFINE_boolean("is_train", True, "Is training flag") 
+flags.DEFINE_boolean("is_train", True, "Is training flag")
 flags.DEFINE_integer("hidden_size", 64, "size of the hidden VAE unit")
 flags.DEFINE_float("lr_vae", 1e-6, "learning rate for vae")
 flags.DEFINE_integer("max_epoch_vae", 10, "max epoch")
@@ -44,13 +44,23 @@ def main():
     FLAGS.out_dir = 'data/output/lfw/'
     FLAGS.list_dir = 'data/imglist/lfw/'
     FLAGS.pc_dir = 'data/pcomp/lfw/'
+  elif(sys.argv[1] == 'sent'):
+    FLAGS.updates_per_epoch = 380
+    FLAGS.log_interval = 120
+    FLAGS.in_dir = 'data/sent'
+    FLAGS.ext = 'png'
+    FLAGS.out_dir = 'data/output/sent/'
+    FLAGS.list_dir = None
+    FLAGS.pc_dir = 'data/pcomp/sent/'
+    FLAGS.img_height = 256
+    FLAGS.img_width = 256
   #add other datasets here
   else:
     raise NameError('[ERROR] Incorrect dataset key')
 
-  data_loader = lab_imageloader(FLAGS.in_dir, \
-    os.path.join(FLAGS.out_dir, 'images'), \
-    listdir=FLAGS.list_dir)
+  shape = (FLAGS.img_height, FLAGS.img_width)
+  data_loader = lab_imageloader(FLAGS.in_dir, os.path.join(FLAGS.out_dir, 'images'),\
+                                listdir=FLAGS.list_dir, ext=FLAGS.ext, shape=shape)
 
  #Train colorfield VAE
   graph_vae = tf.Graph()
@@ -59,7 +69,7 @@ def main():
     dnn = network(model_colorfield, data_loader, 2, FLAGS)
     latent_vars_colorfield, latent_vars_colorfield_musigma_test = \
      dnn.train_vae(os.path.join(FLAGS.out_dir, 'models'), FLAGS.is_train)
- 
+
   np.save(os.path.join(FLAGS.out_dir, 'lv_color_train.mat'), latent_vars_colorfield)
   np.save(os.path.join(FLAGS.out_dir, 'lv_color_test.mat'), latent_vars_colorfield_musigma_test)
 
